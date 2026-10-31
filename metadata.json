@@ -1,0 +1,8 @@
+{
+  "uuid": "laser-pointer@mcrai-dev.github.io",
+  "name": "Laser Pointer",
+  "description": "Transforme le curseur en pointeur laser pour les présentations et les cours en ligne.",
+  "shell-version": ["43"],
+  "settings-schema": "org.gnome.shell.extensions.laser-pointer",
+  "url": "https://github.com/mcrai-dev/gnome-laser-pointer"
+}

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.laser-pointer" path="/org/gnome/shell/extensions/laser-pointer/">
+    <key name="activation-mode" type="s">
+      <choices>
+        <choice value="always"/>
+        <choice value="hold"/>
+      </choices>
+      <default>'always'</default>
+      <summary>Quand le laser dessine une traînée</summary>
+    </key>
+    <key name="hold-key" type="s">
+      <choices>
+        <choice value="ctrl"/>
+        <choice value="alt"/>
+        <choice value="shift"/>
+      </choices>
+      <default>'ctrl'</default>
+      <summary>Touche à maintenir pour dessiner</summary>
+    </key>
+    <key name="color" type="s">
+      <default>'#ff2d2d'</default>
+      <summary>Couleur du laser, des clics et du dessin</summary>
+    </key>
+    <key name="size" type="s">
+      <choices>
+        <choice value="small"/>
+        <choice value="medium"/>
+        <choice value="large"/>
+      </choices>
+      <default>'medium'</default>
+      <summary>Taille du pointeur et du trait</summary>
+    </key>
+    <key name="pointer-style" type="s">
+      <choices>
+        <choice value="dot"/>
+        <choice value="ring"/>
+        <choice value="halo"/>
+      </choices>
+      <default>'dot'</default>
+      <summary>Style du pointeur</summary>
+    </key>
+    <key name="trail-style" type="s">
+      <choices>
+        <choice value="tapered"/>
+        <choice value="continuous"/>
+        <choice value="none"/>
+      </choices>
+      <default>'tapered'</default>
+      <summary>Style de la traînée</summary>
+    </key>
+    <key name="trail-duration" type="i">
+      <range min="200" max="2000"/>
+      <default>600</default>
+      <summary>Durée de la traînée en millisecondes</summary>
+    </key>
+    <key name="hide-cursor" type="b">
+      <default>false</default>
+      <summary>Masquer le curseur système avec le laser</summary>
+    </key>
+    <key name="click-effect" type="b">
+      <default>true</default>
+      <summary>Afficher un cercle à chaque clic</summary>
+    </key>
+    <key name="draw-duration" type="i">
+      <range min="1" max="60"/>
+      <default>5</default>
+      <summary>Durée du dessin temporaire en secondes</summary>
+    </key>
+    <key name="spotlight-radius" type="i">
+      <range min="50" max="500"/>
+      <default>160</default>
+      <summary>Rayon du projecteur en pixels</summary>
+    </key>
+    <key name="spotlight-dim" type="i">
+      <range min="20" max="95"/>
+      <default>65</default>
+      <summary>Assombrissement du projecteur en pourcentage</summary>
+    </key>
+    <key name="magnifier-factor" type="d">
+      <range min="1.5" max="5"/>
+      <default>2</default>
+      <summary>Grossissement de la loupe</summary>
+    </key>
+    <key name="do-not-disturb" type="b">
+      <default>true</default>
+      <summary>Couper les notifications en mode présentation</summary>
+    </key>
+    <key name="display-target" type="s">
+      <choices>
+        <choice value="all"/>
+        <choice value="primary"/>
+      </choices>
+      <default>'all'</default>
+      <summary>Écrans où les effets s'affichent</summary>
+    </key>
+    <key name="auto-off-minutes" type="i">
+      <range min="0" max="240"/>
+      <default>0</default>
+      <summary>Quitter après ce nombre de minutes sans mouvement (0 : jamais)</summary>
+    </key>
+    <key name="toggle-presentation" type="as">
+      <default><![CDATA[['<Super><Shift>l']]]></default>
+      <summary>Raccourci du mode présentation</summary>
+    </key>
+    <key name="tool-laser" type="as">
+      <default><![CDATA[['<Super><Alt>1']]]></default>
+      <summary>Raccourci du laser</summary>
+    </key>
+    <key name="tool-spotlight" type="as">
+      <default><![CDATA[['<Super><Alt>2']]]></default>
+      <summary>Raccourci du projecteur</summary>
+    </key>
+    <key name="tool-magnifier" type="as">
+      <default><![CDATA[['<Super><Alt>3']]]></default>
+      <summary>Raccourci de la loupe</summary>
+    </key>
+    <key name="tool-draw" type="as">
+      <default><![CDATA[['<Super><Alt>4']]]></default>
+      <summary>Raccourci du dessin</summary>
+    </key>
+  </schema>
+</schemalist>

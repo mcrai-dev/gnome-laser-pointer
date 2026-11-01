@@ -67,6 +67,30 @@
       <default>5</default>
       <summary>Durée du dessin temporaire en secondes</summary>
     </key>
+    <key name="highlight-color" type="s">
+      <choices>
+        <choice value="yellow"/>
+        <choice value="green"/>
+        <choice value="pink"/>
+        <choice value="blue"/>
+      </choices>
+      <default>'yellow'</default>
+      <summary>Couleur du surligneur</summary>
+    </key>
+    <key name="highlight-width" type="i">
+      <range min="8" max="80"/>
+      <default>24</default>
+      <summary>Épaisseur du surligneur en pixels</summary>
+    </key>
+    <key name="highlight-duration" type="i">
+      <range min="1" max="300"/>
+      <default>15</default>
+      <summary>Durée du surlignage en secondes</summary>
+    </key>
+    <key name="highlight-persist" type="b">
+      <default>false</default>
+      <summary>Garder le surlignage jusqu'à l'effacement</summary>
+    </key>
     <key name="spotlight-radius" type="i">
       <range min="50" max="500"/>
       <default>160</default>
@@ -114,6 +138,14 @@
     <key name="tool-magnifier" type="as">
       <default><![CDATA[['<Super><Alt>3']]]></default>
       <summary>Raccourci de la loupe</summary>
+    </key>
+    <key name="tool-highlight" type="as">
+      <default><![CDATA[['<Super><Alt>5']]]></default>
+      <summary>Raccourci du surligneur</summary>
+    </key>
+    <key name="clear-annotations" type="as">
+      <default><![CDATA[['<Super><Alt>0']]]></default>
+      <summary>Raccourci pour tout effacer</summary>
     </key>
     <key name="tool-draw" type="as">
       <default><![CDATA[['<Super><Alt>4']]]></default>

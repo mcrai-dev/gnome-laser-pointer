@@ -19,6 +19,8 @@ const FRAME_INTERVAL_MS = 16;
 const RIPPLE_SIZE = 64;
 const RIPPLE_DURATION_MS = 400;
 const INK_FADE_MS = 500;
+const HIGHLIGHT_OPACITY = 110;
+const HIGHLIGHT_COLORS = {yellow: '#ffe600', green: '#39d96b', pink: '#ff5ca8', blue: '#42b6ff'};
 
 const SIZES = {
     small: {trail: 4, pointer: 8},
@@ -40,10 +42,14 @@ const TOOLS = [
     {id: 'spotlight', label: 'Projecteur', shortcut: 'tool-spotlight'},
     {id: 'magnifier', label: 'Loupe', shortcut: 'tool-magnifier'},
     {id: 'draw', label: 'Dessin (Échap pour quitter)', shortcut: 'tool-draw'},
+    {id: 'highlight', label: 'Surligneur (Échap pour quitter)', shortcut: 'tool-highlight'},
 ];
+
+const CAPTURE_TOOLS = ['draw', 'highlight'];
 
 const SHORTCUT_KEYS = [
     'toggle-presentation',
+    'clear-annotations',
     ...TOOLS.map(tool => tool.shortcut),
 ];
 
@@ -90,6 +96,10 @@ class LaserPointerExtension {
             new PopupMenu.PopupSeparatorMenuItem()
         );
 
+        const clearItem = new PopupMenu.PopupMenuItem('Tout effacer');
+        clearItem.connect('activate', () => this._clearAnnotations());
+        this._button.menu.addMenuItem(clearItem);
+
         const prefsItem = new PopupMenu.PopupMenuItem('Paramètres');
         prefsItem.connect('activate', () => ExtensionUtils.openPrefs());
         this._button.menu.addMenuItem(prefsItem);
@@ -101,6 +111,7 @@ class LaserPointerExtension {
         );
         for (const tool of TOOLS)
             this._addKeybinding(tool.shortcut, () => this._selectTool(tool.id));
+        this._addKeybinding('clear-annotations', () => this._clearAnnotations());
 
         this._settingsId = this._settings.connect('changed', (_settings, key) => {
             if (this._active && !SHORTCUT_KEYS.includes(key))
@@ -179,6 +190,10 @@ class LaserPointerExtension {
             hideCursor: s.get_boolean('hide-cursor'),
             clickEffect: s.get_boolean('click-effect'),
             drawDuration: s.get_int('draw-duration') * 1000,
+            highlightColor: HIGHLIGHT_COLORS[s.get_string('highlight-color')],
+            highlightWidth: s.get_int('highlight-width'),
+            highlightDuration: s.get_int('highlight-duration') * 1000,
+            highlightPersist: s.get_boolean('highlight-persist'),
             spotlightRadius: s.get_int('spotlight-radius'),
             spotlightDim: s.get_int('spotlight-dim') / 100,
             magnifierFactor: s.get_double('magnifier-factor'),
@@ -193,6 +208,7 @@ class LaserPointerExtension {
         this._points = [];
         this._ripples = [];
         this._ink = [];
+        this._highlights = [];
         this._stroke = 0;
         this._wasDrawing = false;
         this._wasPressed = false;
@@ -235,6 +251,7 @@ class LaserPointerExtension {
         this._points = null;
         this._ripples = null;
         this._ink = null;
+        this._highlights = null;
 
         Meta.enable_unredirect_for_display(global.display);
 
@@ -283,9 +300,9 @@ class LaserPointerExtension {
         this._overlay.add_child(this._pointer);
     }
 
-    _createStroke(width) {
+    _createStroke(width, color = this._config.color) {
         return new St.Widget({
-            style: `background-color: ${this._config.color}; border-radius: ${width}px;`,
+            style: `background-color: ${color}; border-radius: ${width}px;`,
         });
     }
 
@@ -337,6 +354,7 @@ class LaserPointerExtension {
             this._startMagnifier();
             break;
         case 'draw':
+        case 'highlight':
             this._startDrawing();
             break;
         }
@@ -361,6 +379,7 @@ class LaserPointerExtension {
             this._stopMagnifier();
             break;
         case 'draw':
+        case 'highlight':
             this._stopDrawing();
             break;
         }
@@ -398,29 +417,41 @@ class LaserPointerExtension {
         });
         this._overlay.add_child(this._capture);
         this._inkPoint = null;
+        this._highlightStroke = null;
 
         this._capture.connect('button-press-event', (_actor, event) => {
             const [x, y] = event.get_coords();
 
             this._inkPoint = {x, y};
+            if (this._tool === 'highlight')
+                this._beginHighlight(x, y);
             return Clutter.EVENT_STOP;
         });
         this._capture.connect('motion-event', (_actor, event) => {
             if (this._inkPoint) {
                 const [x, y] = event.get_coords();
 
-                this._addInk(this._inkPoint, {x, y});
-                this._inkPoint = {x, y};
+                if (this._tool === 'highlight') {
+                    this._extendHighlight(x, y, event.get_state());
+                } else {
+                    this._addInk(this._inkPoint, {x, y});
+                    this._inkPoint = {x, y};
+                }
             }
             return Clutter.EVENT_STOP;
         });
         this._capture.connect('button-release-event', () => {
+            this._endHighlight();
             this._inkPoint = null;
             return Clutter.EVENT_STOP;
         });
         this._capture.connect('key-press-event', (_actor, event) => {
-            if (event.get_key_symbol() === Clutter.KEY_Escape)
+            const key = event.get_key_symbol();
+
+            if (key === Clutter.KEY_Escape)
                 this._selectTool('laser');
+            else if (key === Clutter.KEY_Delete)
+                this._clearAnnotations();
             return Clutter.EVENT_STOP;
         });
 
@@ -431,12 +462,71 @@ class LaserPointerExtension {
     }
 
     _stopDrawing() {
+        this._endHighlight();
         global.display.set_cursor(Meta.Cursor.DEFAULT);
         Main.popModal(this._grab);
         this._grab = null;
         this._capture.destroy();
         this._capture = null;
         this._inkPoint = null;
+    }
+
+    // Le trait est aplati avant d'être rendu translucide : ses segments se
+    // chevauchent sans faire de taches plus foncées
+    _beginHighlight(x, y) {
+        this._highlightStroke = new Clutter.Actor({
+            offscreen_redirect: Clutter.OffscreenRedirect.ALWAYS,
+            opacity: HIGHLIGHT_OPACITY,
+        });
+        this._overlay.insert_child_below(this._highlightStroke, this._pointer);
+        this._highlightStart = {x, y};
+        this._addHighlightSegment({x, y}, {x, y});
+    }
+
+    _addHighlightSegment(from, to) {
+        const {highlightWidth: width, highlightColor: color} = this._config;
+        const segment = this._createStroke(width, color);
+
+        this._placeStroke(segment, from, to, width);
+        this._highlightStroke.add_child(segment);
+    }
+
+    // Maj maintenue : le trait reste horizontal, à la hauteur de son départ
+    _extendHighlight(x, y, state) {
+        if (!this._highlightStroke)
+            return;
+
+        if (state & Clutter.ModifierType.SHIFT_MASK) {
+            this._highlightStroke.destroy_all_children();
+            this._addHighlightSegment(this._highlightStart, {x, y: this._highlightStart.y});
+            this._inkPoint = {x, y: this._highlightStart.y};
+            return;
+        }
+
+        this._addHighlightSegment(this._inkPoint, {x, y});
+        this._inkPoint = {x, y};
+    }
+
+    _endHighlight() {
+        if (!this._highlightStroke)
+            return;
+
+        this._highlights.push({
+            actor: this._highlightStroke,
+            time: GLib.get_monotonic_time() / 1000,
+        });
+        this._highlightStroke = null;
+    }
+
+    _clearAnnotations() {
+        if (!this._active)
+            return;
+
+        this._endHighlight();
+        for (const {actor} of [...this._ink, ...this._highlights])
+            actor.destroy();
+        this._ink = [];
+        this._highlights = [];
     }
 
     _addInk(from, to) {
@@ -480,12 +570,13 @@ class LaserPointerExtension {
         const pressed = (mods & CLICK_MASK) !== 0;
 
         if (pressed && !this._wasPressed &&
-            this._config.clickEffect && this._tool !== 'draw')
+            this._config.clickEffect && !CAPTURE_TOOLS.includes(this._tool))
             this._addRipple(x, y, now);
         this._wasPressed = pressed;
 
         this._updateRipples(now);
         this._updateInk(now);
+        this._updateHighlights(now);
 
         if (this._tool === 'laser') {
             this._updateLaser(x, y, mods, now);
@@ -521,6 +612,25 @@ class LaserPointerExtension {
 
             actor.set_scale(0.2 + 0.8 * progress, 0.2 + 0.8 * progress);
             actor.opacity = Math.round(255 * (1 - progress));
+            return true;
+        });
+    }
+
+    _updateHighlights(now) {
+        if (this._config.highlightPersist)
+            return;
+
+        const duration = this._config.highlightDuration;
+
+        this._highlights = this._highlights.filter(({actor, time}) => {
+            const remaining = duration - (now - time);
+
+            if (remaining <= 0) {
+                actor.destroy();
+                return false;
+            }
+
+            actor.opacity = Math.round(HIGHLIGHT_OPACITY * Math.min(remaining / INK_FADE_MS, 1));
             return true;
         });
     }

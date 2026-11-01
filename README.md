@@ -14,9 +14,13 @@ devient un pointeur laser, avec un projecteur, une loupe et un dessin temporaire
 | Projecteur | `Super+Alt+2` | Assombrit l'écran sauf autour du curseur |
 | Loupe | `Super+Alt+3` | Agrandit l'écran autour du curseur |
 | Dessin | `Super+Alt+4` | Trace à la souris, effacé après quelques secondes. `Échap` pour quitter |
+| Surligneur | `Super+Alt+5` | Surligne en transparence, trait horizontal avec `Maj`. `Échap` pour quitter |
+| Tout effacer | `Super+Alt+0` | Retire le dessin et le surlignage (`Suppr` pendant ces outils) |
 
 Un cercle s'affiche à chaque clic, et les notifications sont coupées pendant le
 mode présentation. Le tout se règle dans les paramètres de l'extension.
+
+`Super` est la touche Windows du clavier.
 
 ## Compatibilité
 

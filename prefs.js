@@ -212,6 +212,15 @@ function fillPreferencesWindow(window) {
     const tools = createGroup(page, 'Outils');
 
     addSpinRow(tools, settings, 'draw-duration', 'Durée du dessin (s)', 1, 60, 1);
+    addChoiceRow(tools, settings, 'highlight-color', 'Couleur du surligneur', {
+        yellow: 'Jaune',
+        green: 'Vert',
+        pink: 'Rose',
+        blue: 'Bleu',
+    });
+    addSpinRow(tools, settings, 'highlight-width', 'Épaisseur du surligneur (px)', 8, 80, 2);
+    addSpinRow(tools, settings, 'highlight-duration', 'Durée du surlignage (s)', 1, 300, 5);
+    addSwitchRow(tools, settings, 'highlight-persist', 'Garder le surlignage jusqu’à l’effacement');
     addSpinRow(tools, settings, 'spotlight-radius', 'Rayon du projecteur (px)', 50, 500, 10);
     addSpinRow(tools, settings, 'spotlight-dim', 'Assombrissement du projecteur (%)', 20, 95, 5);
     addSpinRow(tools, settings, 'magnifier-factor', 'Grossissement de la loupe', 1.5, 5, 0.5, 1);
@@ -232,6 +241,8 @@ function fillPreferencesWindow(window) {
     addShortcutRow(shortcuts, settings, 'tool-spotlight', 'Projecteur', window);
     addShortcutRow(shortcuts, settings, 'tool-magnifier', 'Loupe', window);
     addShortcutRow(shortcuts, settings, 'tool-draw', 'Dessin', window);
+    addShortcutRow(shortcuts, settings, 'tool-highlight', 'Surligneur', window);
+    addShortcutRow(shortcuts, settings, 'clear-annotations', 'Tout effacer', window);
 
     window.search_enabled = true;
     window.add(page);

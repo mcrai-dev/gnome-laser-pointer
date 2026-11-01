@@ -3,6 +3,8 @@
 Extension GNOME Shell pour les présentations et les cours en ligne : le curseur
 devient un pointeur laser, avec un projecteur, une loupe et un dessin temporaire.
 
+![Présentation de Laser Pointer](docs/Laser_Pointer_presentation.png)
+
 ## Outils
 
 | Outil | Raccourci | Effet |
